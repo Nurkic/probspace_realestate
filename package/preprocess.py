@@ -57,6 +57,7 @@ class _CategoryEncoder:
 def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
     """和暦を西暦に変換する
     '戦前'は昭和20年とした
+    新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
     """
     df["建築年(和暦)"] = df["建築年"]
     df["建築年"].dropna(inplace=True)
