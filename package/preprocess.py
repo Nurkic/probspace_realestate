@@ -53,3 +53,28 @@ class _CategoryEncoder:
 
         return df
 
+
+def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
+    """和暦を西暦に変換する
+    '戦前'は昭和20年とした
+    新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
+    """
+    df["建築年(和暦)"] = df["建築年"]
+    df["建築年"].dropna(inplace=True)
+    df["建築年"] = df["建築年"].str.replace("戦前", "昭和20年")
+    df["年号"] = df["建築年"].str[:2]
+    df["和暦年数"] = df["建築年"].str[2:].str.strip("年").fillna(0).astype(int)
+    df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
+    df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
+    return df
+
+
+def building_structure_to_onehot(df: pd.DataFrame) -> pd.DataFrame:
+    """建物の構造をone-hotなベクトルに変換する
+    """
+    df["建物の構造"].dropna(inplace=True)
+    tmp = df["建物の構造"].str.get_dummies("、")
+    df = pd.concat([df, tmp], axis=1)
+    # 冪等性を考慮して
+    df = df.loc[:,~df.columns.duplicated()]
+    return df
