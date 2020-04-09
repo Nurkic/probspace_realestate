@@ -67,3 +67,14 @@ def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
     df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
     return df
+
+
+def building_structure_to_onehot(df: pd.DataFrame) -> pd.DataFrame:
+    """建物の構造をone-hotなベクトルに変換する
+    """
+    df["建物の構造"].dropna(inplace=True)
+    tmp = df["建物の構造"].str.get_dummies("、")
+    df = pd.concat([df, tmp], axis=1)
+    # 冪等性を考慮して
+    df = df.loc[:,~df.columns.duplicated()]
+    return df
