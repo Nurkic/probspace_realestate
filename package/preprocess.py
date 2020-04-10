@@ -14,7 +14,7 @@ class _Rename:
         self.df = df
 
 
-    # Convert train and test column names to English
+    """ Convert train and test column names to English"""
     def _rename_t(self) -> pd.DataFrame:
         with open("names.json", "r", encoding="utf-8") as f:
             d = json.load(f)
@@ -23,7 +23,7 @@ class _Rename:
         return df
 
 
-    # Unify published column names
+    """ Unify published column names"""
     def _rename_p(self) -> pd.DataFrame:
         pair = {"所在地コード":"市区町村コード", "建蔽率":"建ぺい率（％）", "容積率":"容積率（％）", "駅名":"最寄駅：名称", 
             "地積":"面積（㎡）", "市区町村名":"市区町村名", '前面道路の幅員':'前面道路：幅員（ｍ）', 
@@ -35,13 +35,15 @@ class _Rename:
         return df
 
 
-class _CategoryEncoder:
+class _Encoder:
     def __init__(
         self,
         df: pd.DataFrame
     ) -> None:
         self.df = df
 
+
+    """ label encoding"""
     def _cat_encoder(self) -> pd.DataFrame:
         object_cols = []
         for column in self.df.columns:
@@ -51,6 +53,13 @@ class _CategoryEncoder:
         ce_oe = ce.OrdinalEncoder(cols=object_cols,handle_unknown='impute')
         df = ce_oe.fit_transform(self.df)
 
+        return df
+
+
+    """ one hot encoding"""
+    def _onehot_encoder(self) -> pd.DataFrame:
+        df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
+    
         return df
 
 
@@ -73,7 +82,7 @@ def building_structure_to_onehot(df: pd.DataFrame) -> pd.DataFrame:
     """建物の構造をone-hotなベクトルに変換する
     """
     df["建物の構造"].dropna(inplace=True)
-    tmp = df["建物の構造"].str.get_dummies("、")
+    tmp = df["建物の構造"].str.get_dummies("、", drop_first=True)
     df = pd.concat([df, tmp], axis=1)
     # 冪等性を考慮して
     df = df.loc[:,~df.columns.duplicated()]
