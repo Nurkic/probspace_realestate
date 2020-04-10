@@ -87,3 +87,19 @@ def building_structure_to_onehot(df: pd.DataFrame) -> pd.DataFrame:
     # 冪等性を考慮して
     df = df.loc[:,~df.columns.duplicated()]
     return df
+
+
+def building_structure_to_label(df: pd.DataFrame, th: int = 100) -> pd.DataFrame:
+    """建物の構造をラベルエンコードするための前処理
+    単語が組み合わさっているもののうち，出現回数が少ないものを1つにまとめる
+    
+    Parameters
+    ----------
+    th : int
+        出現回数の閾値(default 100)
+    """
+    _df = df.copy()
+    category_dict = _df["建物の構造"].value_counts().to_dict()
+    misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
+    _df["建物の構造"] = _df["建物の構造"].mask(_df["建物の構造"].isin(misc_list), "その他")
+    return _df
