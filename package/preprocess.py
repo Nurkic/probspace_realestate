@@ -78,19 +78,25 @@ def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def building_structure_to_onehot(df: pd.DataFrame) -> pd.DataFrame:
-    """建物の構造をone-hotなベクトルに変換する
+def to_onehot(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    """pandas.DataFrameの要素をone-hotなベクトルに変換する
+    変換したい列名をリストで渡す
+
+    Parameters
+    ----------
+    columns : list
+        列名のリスト
     """
-    df["建物の構造"].dropna(inplace=True)
-    tmp = df["建物の構造"].str.get_dummies("、", drop_first=True)
+    df[columns].dropna(inplace=True)
+    tmp = df[columns].str.get_dummies("、")
     df = pd.concat([df, tmp], axis=1)
     # 冪等性を考慮して
     df = df.loc[:,~df.columns.duplicated()]
     return df
 
 
-def building_structure_to_label(df: pd.DataFrame, th: int = 100) -> pd.DataFrame:
-    """建物の構造をラベルエンコードするための前処理
+def to_label(df: pd.DataFrame, column: str, th: int = 100) -> pd.DataFrame:
+    """ラベルエンコードするための前処理
     単語が組み合わさっているもののうち，出現回数が少ないものを1つにまとめる
     
     Parameters
@@ -99,7 +105,7 @@ def building_structure_to_label(df: pd.DataFrame, th: int = 100) -> pd.DataFrame
         出現回数の閾値(default 100)
     """
     _df = df.copy()
-    category_dict = _df["建物の構造"].value_counts().to_dict()
+    category_dict = _df[column].value_counts().to_dict()
     misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
-    _df["建物の構造"] = _df["建物の構造"].mask(_df["建物の構造"].isin(misc_list), "その他")
+    _df[column] = _df[column].mask(_df[column].isin(misc_list), "misc")
     return _df
