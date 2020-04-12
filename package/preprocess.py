@@ -79,7 +79,7 @@ class _Encoder:
 
 class Preprocessor(_Rename, _Encoder):
     def __init__(self, df: pd.DataFrame):
-        super(_Encoder, self).__init__(df)
+        super(Preprocessor, self).__init__(df)
 
     def to_onehot(self) -> pd.DataFrame:
         """Convert a pandas.DataFrame element to a one-hot vector
