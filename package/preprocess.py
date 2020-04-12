@@ -72,7 +72,7 @@ class _Encoder:
         ) -> pd.DataFrame:
         count_df = self.df[colname].value_counts().rename_axis[colname].reset_index(name="counts")
         adj_list = list(count_df[colname][count_df["counts"] < k])
-        self.df[colname] = self.df[colname].replace(adj_list, "その他")
+        self.df[colname] = self.df[colname].replace(adj_list, "misc")
 
         return self.df
 
