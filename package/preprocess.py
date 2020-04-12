@@ -155,3 +155,12 @@ class Preprocessor(_Rename, _Encoder):
         df = self.df.copy()
         df["取引時点"] = df["取引時点"].map(f)
         return df
+
+    def all(self):
+        self.df = self.to_onehot()
+        self.df = self.to_label("建物の構造", 100)
+        self.df = self.to_label("用途", 100)
+        self.df = self.convert_construction_year()
+        self.df = self.direction_to_int("前面道路：方位")
+        self.df = self.convert_trading_point()
+        return self.df
