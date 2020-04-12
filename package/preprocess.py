@@ -81,88 +81,77 @@ class Preprocessor(_Rename, _Encoder):
     def __init__(self, df: pd.DataFrame):
         super(_Encoder, self).__init__(df)
 
+    def to_onehot(self) -> pd.DataFrame:
+        """Convert a pandas.DataFrame element to a one-hot vector
+        """
+        tmp = self._onehot_encoder()
+        df = pd.concat([self.df, tmp], axis=1)
+        # for idempotent
+        df = df.loc[:, ~df.columns.duplicated()]
+        return df
 
-def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
-    """和暦を西暦に変換する
-    '戦前'は昭和20年とした
-    新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
-    """
-    df["建築年(和暦)"] = df["建築年"]
-    df["建築年"].dropna(inplace=True)
-    df["建築年"] = df["建築年"].str.replace("戦前", "昭和20年")
-    df["年号"] = df["建築年"].str[:2]
-    df["和暦年数"] = df["建築年"].str[2:].str.strip("年").fillna(0).astype(int)
-    df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
-    df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
-    return df
+    def to_label(self, column: str, th: int = 100) -> pd.DataFrame:
+        """Preprocessing for label-encoding.
+        Combine the fewest frequent combinations of words into one.
+        
+        Parameters
+        ----------
+        th : int
+            threshold of the number of occurences (default 100)
+        """
+        df = self.df.copy()
+        category_dict = df[column].value_counts().to_dict()
+        misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
+        df[column] = df[column].mask(df[column].isin(misc_list), "misc")
+        return df
 
+    def convert_construction_year(self) -> pd.DataFrame:
+        """和暦を西暦に変換する
+        '戦前'は昭和20年とした
+        新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
+        """
+        df = self.df.copy()
+        df["建築年(和暦)"] = df["建築年"]
+        df["建築年"].dropna(inplace=True)
+        df["建築年"] = df["建築年"].str.replace("戦前", "昭和20年")
+        df["年号"] = df["建築年"].str[:2]
+        df["和暦年数"] = df["建築年"].str[2:].str.strip("年").fillna(0).astype(int)
+        df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
+        df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
+        return df
 
-def to_onehot(df: pd.DataFrame, columns: list) -> pd.DataFrame:
-    """pandas.DataFrameの要素をone-hotなベクトルに変換する
-    変換したい列名をリストで渡す
-
-    Parameters
-    ----------
-    columns : list
-        列名のリスト
-    """
-    df[columns].dropna(inplace=True)
-    tmp = df[columns].str.get_dummies("、")
-    df = pd.concat([df, tmp], axis=1)
-    # 冪等性を考慮して
-    df = df.loc[:,~df.columns.duplicated()]
-    return df
-
-
-def to_label(df: pd.DataFrame, column: str, th: int = 100) -> pd.DataFrame:
-    """ラベルエンコードするための前処理
-    単語が組み合わさっているもののうち，出現回数が少ないものを1つにまとめる
-    
-    Parameters
-    ----------
-    th : int
-        出現回数の閾値(default 100)
-    """
-    _df = df.copy()
-    category_dict = _df[column].value_counts().to_dict()
-    misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
-    _df[column] = _df[column].mask(_df[column].isin(misc_list), "misc")
-    return _df
-
-
-def direction_to_int(df: pd.DataFrame, column: str) -> pd.DataFrame:
-    """方角を整数に変換する
-    東を0として，北東を1，北を2...というふうに反時計回りに1ずつ増える
-    接面道路無は-1
-    整数に45をかけることで角度に変換できる
-    """
-    DIRECTION_ANGLE_DICT = {
-        "東": 0,
-        "北東": 1,
-        "北": 2,
-        "北西": 3,
-        "西": 4,
-        "南西": 5,
-        "南": 6,
-        "南東": 7,
-        "接面道路無": -1
-    }
-    _df = df.copy()
-    _df[column] = _df[column].map(DIRECTION_ANGLE_DICT)
-    return _df
-
-
-def convert_trading_point(df: pd.DataFrame) -> pd.DataFrame:
-    def f(x: str):
-        TABLE = {
-            "１": 0,
-            "２": 1,
-            "３": 2,
-            "４": 3
+    def direction_to_int(self, column: str) -> pd.DataFrame:
+        """方角を整数に変換する
+        東を0として，北東を1，北を2...というふうに反時計回りに1ずつ増える
+        接面道路無は-1
+        整数に45をかけることで角度に変換できる
+        """
+        DIRECTION_ANGLE_DICT = {
+            "東": 0,
+            "北東": 1,
+            "北": 2,
+            "北西": 3,
+            "西": 4,
+            "南西": 5,
+            "南": 6,
+            "南東": 7,
+            "接面道路無": -1
         }
-        l = x.split("年第")
-        return float(l[0]) + TABLE[l[1][0]] * 0.25
+        df = self.df.copy()
+        df[column] = df[column].map(DIRECTION_ANGLE_DICT)
+        return df
 
-    _df = df.copy()
-    _df["取引時点"] = df["取引時点"].map(f)
-    return _df
+    def convert_trading_point(self) -> pd.DataFrame:
+        def f(x: str):
+            TABLE = {
+                "１": 0,
+                "２": 1,
+                "３": 2,
+                "４": 3
+            }
+            l = x.split("年第")
+            return float(l[0]) + TABLE[l[1][0]] * 0.25
+
+        df = self.df.copy()
+        df["取引時点"] = df["取引時点"].map(f)
+        return df
