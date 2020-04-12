@@ -147,3 +147,19 @@ def direction_to_int(df: pd.DataFrame, column: str) -> pd.DataFrame:
     _df = df.copy()
     _df[column] = _df[column].map(DIRECTION_ANGLE_DICT)
     return _df
+
+
+def convert_trading_point(df: pd.DataFrame) -> pd.DataFrame:
+    def f(x: str):
+        TABLE = {
+            "１": 0,
+            "２": 1,
+            "３": 2,
+            "４": 3
+        }
+        l = x.split("年第")
+        return float(l[0]) + TABLE[l[1][0]] * 0.25
+
+    _df = df.copy()
+    _df["取引時点"] = df["取引時点"].map(f)
+    return _df
