@@ -77,6 +77,9 @@ class _Encoder:
         return self.df
 
 
+class Preprocessor(_Rename, _Encoder):
+    def __init__(self, df: pd.DataFrame):
+        super(_Encoder, self).__init__(df)
 
 
 def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
