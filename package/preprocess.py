@@ -109,3 +109,25 @@ def to_label(df: pd.DataFrame, column: str, th: int = 100) -> pd.DataFrame:
     misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
     _df[column] = _df[column].mask(_df[column].isin(misc_list), "misc")
     return _df
+
+
+def direction_to_int(df: pd.DataFrame, column: str) -> pd.DataFrame:
+    """方角を整数に変換する
+    東を0として，北東を1，北を2...というふうに反時計回りに1ずつ増える
+    接面道路無は-1
+    整数に45をかけることで角度に変換できる
+    """
+    DIRECTION_ANGLE_DICT = {
+        "東": 0,
+        "北東": 1,
+        "北": 2,
+        "北西": 3,
+        "西": 4,
+        "南西": 5,
+        "南": 6,
+        "南東": 7,
+        "接面道路無": -1
+    }
+    _df = df.copy()
+    _df[column] = _df[column].map(DIRECTION_ANGLE_DICT)
+    return _df
