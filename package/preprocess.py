@@ -43,6 +43,7 @@ class _Encoder:
         self.df = df
 
 
+
     """ label encoding"""
     def _cat_encoder(self) -> pd.DataFrame:
         object_cols = []
@@ -61,6 +62,21 @@ class _Encoder:
         df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
     
         return df
+
+    
+    """ Adjust the number of label types"""
+    def _relabeler(
+        self,
+        colname: str,
+        k: int = 100
+        ) -> pd.DataFrame:
+        count_df = self.df[colname].value_counts().rename_axis[colname].reset_index(name="counts")
+        adj_list = list(count_df[colname][count_df["counts"] < k])
+        self.df[colname] = self.df[colname].replace(adj_list, "その他")
+
+        return self.df
+
+
 
 
 def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
