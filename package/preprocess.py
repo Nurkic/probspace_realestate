@@ -91,6 +91,24 @@ def floor(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def min_from_sta(df: pd.DataFrame) -> pd.DataFrame:
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
+    
+    return df
+
+
+def total_floor_area(df: pd.DataFrame) -> pd.DataFrame:
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
+    
+    return df
+
+
 
 def convert_construction_year(df: pd.DataFrame) -> pd.DataFrame:
     """和暦を西暦に変換する
