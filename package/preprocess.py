@@ -6,7 +6,7 @@ import json
 import category_encoders as ce
 
 
-class _Rename:
+class Rename:
     def __init__(
         self,
         df: pd.DataFrame
@@ -15,7 +15,7 @@ class _Rename:
 
 
     """ Convert train and test column names to English"""
-    def _rename_t(self) -> pd.DataFrame:
+    def rename_t(self) -> pd.DataFrame:
         with open("names.json", "r", encoding="utf-8") as f:
             d = json.load(f)
         df = self.df.rename(columns=d)
@@ -24,7 +24,7 @@ class _Rename:
 
 
     """ Unify published column names"""
-    def _rename_p(self) -> pd.DataFrame:
+    def rename_p(self) -> pd.DataFrame:
         pair = {"所在地コード":"市区町村コード", "建蔽率":"建ぺい率（％）", "容積率":"容積率（％）", "駅名":"最寄駅：名称", 
             "地積":"面積（㎡）", "市区町村名":"市区町村名", '前面道路の幅員':'前面道路：幅員（ｍ）', 
             "前面道路の方位区分":"前面道路：方位", "前面道路区分":"前面道路：種類", "形状区分":"土地の形状", 
@@ -35,7 +35,8 @@ class _Rename:
         return df
 
 
-class _Encoder:
+
+class Encoder:
     def __init__(
         self,
         df: pd.DataFrame
@@ -45,7 +46,7 @@ class _Encoder:
 
 
     """ label encoding"""
-    def _cat_encoder(self) -> pd.DataFrame:
+    def cat_encoder(self) -> pd.DataFrame:
         object_cols = []
         for column in self.df.columns:
             if self.df[column].dtype == object:
@@ -58,14 +59,14 @@ class _Encoder:
 
 
     """ one hot encoding"""
-    def _onehot_encoder(self) -> pd.DataFrame:
+    def onehot_encoder(self) -> pd.DataFrame:
         df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
     
         return df
 
     
     """ Adjust the number of label types"""
-    def _relabeler(
+    def relabeler(
         self,
         colname: str,
         k: int = 100
@@ -77,10 +78,41 @@ class _Encoder:
         return self.df
 
 
+def floor(df: pd.DataFrame) -> pd.DataFrame:
+    df['L'] = df['間取り'].map(lambda x: 1 if 'Ｌ' in str(x) else 0)
+    df['D'] = df['間取り'].map(lambda x: 1 if 'Ｄ' in str(x) else 0)
+    df['K'] = df['間取り'].map(lambda x: 1 if 'Ｋ' in str(x) else 0)
+    df['S'] = df['間取り'].map(lambda x: 1 if 'Ｓ' in str(x) else 0)
+    df['R'] = df['間取り'].map(lambda x: 1 if 'Ｒ' in str(x) else 0)
+    df['Maisonette'] = df['間取り'].map(lambda x: 1 if 'メゾネット' in str(x) else 0)
+    df['OpenFloor'] = df['間取り'].map(lambda x: 1 if 'オープンフロア' in str(x) else 0)
+    df['Studio'] = df['間取り'].map(lambda x: 1 if 'スタジオ' in str(x) else 0)
+    
+    return df
+
+
+def min_from_sta(df: pd.DataFrame) -> pd.DataFrame:
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
+    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
+    
+    return df
+
+
+def total_floor_area(df: pd.DataFrame) -> pd.DataFrame:
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
+    df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
+    
+    return df
+
+  
 class Preprocessor(_Rename, _Encoder):
     def __init__(self, df: pd.DataFrame):
         super(Preprocessor, self).__init__(df)
-
+        
     def to_onehot(self) -> pd.DataFrame:
         """Convert a pandas.DataFrame element to a one-hot vector
         """
