@@ -1,5 +1,5 @@
-from .preprocess import _Rename
+from .preprocess import Rename
 
 __all__ = [
-    "_Rename"
+    "Rename"
 ]
