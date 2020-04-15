@@ -6,7 +6,7 @@ import json
 import category_encoders as ce
 
 
-class Rename:
+class _Rename:
     def __init__(
         self,
         df: pd.DataFrame
@@ -35,8 +35,7 @@ class Rename:
         return df
 
 
-
-class Encoder:
+class _Encoder:
     def __init__(
         self,
         df: pd.DataFrame
@@ -46,7 +45,7 @@ class Encoder:
 
 
     """ label encoding"""
-    def cat_encoder(self) -> pd.DataFrame:
+    def _cat_encoder(self) -> pd.DataFrame:
         object_cols = []
         for column in self.df.columns:
             if self.df[column].dtype == object:
@@ -59,7 +58,7 @@ class Encoder:
 
 
     """ one hot encoding"""
-    def onehot_encoder(self) -> pd.DataFrame:
+    def _onehot_encoder(self) -> pd.DataFrame:
         df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
     
         return df
@@ -76,37 +75,6 @@ class Encoder:
         self.df[colname] = self.df[colname].replace(adj_list, "misc")
 
         return self.df
-
-
-def floor(df: pd.DataFrame) -> pd.DataFrame:
-    df['L'] = df['間取り'].map(lambda x: 1 if 'Ｌ' in str(x) else 0)
-    df['D'] = df['間取り'].map(lambda x: 1 if 'Ｄ' in str(x) else 0)
-    df['K'] = df['間取り'].map(lambda x: 1 if 'Ｋ' in str(x) else 0)
-    df['S'] = df['間取り'].map(lambda x: 1 if 'Ｓ' in str(x) else 0)
-    df['R'] = df['間取り'].map(lambda x: 1 if 'Ｒ' in str(x) else 0)
-    df['Maisonette'] = df['間取り'].map(lambda x: 1 if 'メゾネット' in str(x) else 0)
-    df['OpenFloor'] = df['間取り'].map(lambda x: 1 if 'オープンフロア' in str(x) else 0)
-    df['Studio'] = df['間取り'].map(lambda x: 1 if 'スタジオ' in str(x) else 0)
-    
-    return df
-
-
-def min_from_sta(df: pd.DataFrame) -> pd.DataFrame:
-    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
-    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
-    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
-    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
-    df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
-    
-    return df
-
-
-def total_floor_area(df: pd.DataFrame) -> pd.DataFrame:
-    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
-    df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
-    df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
-    
-    return df
 
   
 class Preprocessor(_Rename, _Encoder):
@@ -188,7 +156,41 @@ class Preprocessor(_Rename, _Encoder):
         df["取引時点"] = df["取引時点"].map(f)
         return df
 
+    def floor(self) -> pd.DataFrame:
+        df = self.df.copy()
+        df['L'] = df['間取り'].map(lambda x: 1 if 'Ｌ' in str(x) else 0)
+        df['D'] = df['間取り'].map(lambda x: 1 if 'Ｄ' in str(x) else 0)
+        df['K'] = df['間取り'].map(lambda x: 1 if 'Ｋ' in str(x) else 0)
+        df['S'] = df['間取り'].map(lambda x: 1 if 'Ｓ' in str(x) else 0)
+        df['R'] = df['間取り'].map(lambda x: 1 if 'Ｒ' in str(x) else 0)
+        df['Maisonette'] = df['間取り'].map(lambda x: 1 if 'メゾネット' in str(x) else 0)
+        df['OpenFloor'] = df['間取り'].map(lambda x: 1 if 'オープンフロア' in str(x) else 0)
+        df['Studio'] = df['間取り'].map(lambda x: 1 if 'スタジオ' in str(x) else 0)
+    
+        return df
+
+    def min_from_sta(self) -> pd.DataFrame:
+        df = self.df.copy()
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
+    
+        return df
+
+    def total_floor_area(self) -> pd.DataFrame:
+        df = self.df.copy()
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
+    
+        return df
+
     def all(self):
+        self.df = self.floor()
+        self.df = self.min_from_sta()
+        self.df = self.total_floor_area()
         self.df = self.convert_construction_year()
         self.df = self.direction_to_int("前面道路：方位")
         self.df = self.convert_trading_point()
