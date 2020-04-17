@@ -25,11 +25,12 @@ predata = Preprocessor.all(predata)
 prep_train = pd.concat([df, predata.iloc[:len(train), :]], axis=1)
 prep_test = predata.iloc[len(train):, :]
 
-
-""" model train & predict"""
 train_X = prep_train.drop(["y"], axis=1)
 train_y = prep_train["y"]
 
+
+
+""" model train & predict"""
 reg = OGBMRegressor(random_state=71)
 reg.fit(train_X, train_y)
 
