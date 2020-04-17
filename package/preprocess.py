@@ -68,11 +68,15 @@ class _Encoder:
     def relabeler(
         self,
         column: str,
-        th: int = 100
+        th: int = 100,
+        comma_sep: bool = False
         ) -> pd.DataFrame:
         df = self.df.copy()
         category_dict = df[column].value_counts().to_dict()
-        misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
+        if comma_sep:
+            misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value < th]
+        else:
+            misc_list = [key for key, value in category_dict.items() if value < th]
         df[column] = df[column].mask(df[column].isin(misc_list), "misc")
 
         return df
@@ -194,8 +198,8 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.convert_construction_year()
         self.df = self.direction_to_int("前面道路：方位")
         self.df = self.convert_trading_point()
-        self.df = self.relabeler("建物の構造", 100)
-        self.df = self.relabeler("用途", 100)
+        self.df = self.relabeler("建物の構造", 100, True)
+        self.df = self.relabeler("用途", 100, True)
         self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
         if policy == "onehot":
             self.df = self.to_onehot()
