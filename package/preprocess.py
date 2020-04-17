@@ -70,11 +70,12 @@ class _Encoder:
         colname: str,
         k: int = 100
         ) -> pd.DataFrame:
-        count_df = self.df[colname].value_counts().rename_axis[colname].reset_index(name="counts")
-        adj_list = list(count_df[colname][count_df["counts"] < k])
-        self.df[colname] = self.df[colname].replace(adj_list, "misc")
+        df = self.df.copy()
+        category_dict = df[column].value_counts().to_dict()
+        misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
+        df[column] = df[column].mask(df[column].isin(misc_list), "misc")
 
-        return self.df
+        return df
 
   
 class Preprocessor(_Rename, _Encoder):
