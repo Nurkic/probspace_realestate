@@ -170,13 +170,16 @@ class Preprocessor(_Rename, _Encoder):
         return df
 
     def min_from_sta(self) -> pd.DataFrame:
+        TABLE = {
+            "30分?60分": "45",
+            "1H?1H30": "75",
+            "1H30?2H": "105",
+            "2H?": "120"
+        }
         df = self.df.copy()
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
-    
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(TABLE)
+        df["最寄駅：距離（分）"] = pd.to_numeric(df["最寄駅：距離（分）"], errors="coerce")
+
         return df
 
     def total_floor_area(self) -> pd.DataFrame:
