@@ -164,7 +164,7 @@ class Preprocessor(_Rename, _Encoder):
             "2H?": "120"
         }
         df = self.df.copy()
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(TABLE)
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].replace(TABLE)
         df["最寄駅：距離（分）"] = pd.to_numeric(df["最寄駅：距離（分）"], errors="coerce")
 
         return df
@@ -175,7 +175,7 @@ class Preprocessor(_Rename, _Encoder):
             "10m^2未満": 10
         }
         df = self.df.copy()
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(TABLE)
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
         df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
     
         return df
