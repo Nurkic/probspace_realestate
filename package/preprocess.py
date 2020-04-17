@@ -58,8 +58,8 @@ class _Encoder:
 
 
     """ one hot encoding"""
-    def _onehot_encoder(self) -> pd.DataFrame:
-        df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
+    def _onehot_encoder(self, columns: list) -> pd.DataFrame:
+        df = pd.get_dummies(self.df[columns], drop_first=True, dummy_na=False)
     
         return df
 
@@ -67,8 +67,8 @@ class _Encoder:
     """ Adjust the number of label types"""
     def relabeler(
         self,
-        colname: str,
-        k: int = 100
+        column: str,
+        th: int = 100
         ) -> pd.DataFrame:
         df = self.df.copy()
         category_dict = df[column].value_counts().to_dict()
@@ -82,10 +82,10 @@ class Preprocessor(_Rename, _Encoder):
     def __init__(self, df: pd.DataFrame):
         super(Preprocessor, self).__init__(df)
         
-    def to_onehot(self) -> pd.DataFrame:
+    def to_onehot(self, columns: list) -> pd.DataFrame:
         """Convert a pandas.DataFrame element to a one-hot vector
         """
-        tmp = self._onehot_encoder()
+        tmp = self._onehot_encoder(columns)
         df = pd.concat([self.df, tmp], axis=1)
         # for idempotent
         df = df.loc[:, ~df.columns.duplicated()]
