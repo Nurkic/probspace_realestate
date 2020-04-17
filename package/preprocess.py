@@ -91,21 +91,6 @@ class Preprocessor(_Rename, _Encoder):
         df = df.loc[:, ~df.columns.duplicated()]
         return df
 
-    def to_label(self, column: str, th: int = 100) -> pd.DataFrame:
-        """Preprocessing for label-encoding.
-        Combine the fewest frequent combinations of words into one.
-        
-        Parameters
-        ----------
-        th : int
-            threshold of the number of occurences (default 100)
-        """
-        df = self.df.copy()
-        category_dict = df[column].value_counts().to_dict()
-        misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
-        df[column] = df[column].mask(df[column].isin(misc_list), "misc")
-        return df
-
     def convert_construction_year(self) -> pd.DataFrame:
         """和暦を西暦に変換する
         '戦前'は昭和20年とした
