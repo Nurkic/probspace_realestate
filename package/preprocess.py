@@ -103,7 +103,6 @@ class Preprocessor(_Rename, _Encoder):
         新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
         """
         df = self.df.copy()
-        df["建築年(和暦)"] = df["建築年"]
         df["建築年"].dropna(inplace=True)
         df["建築年"] = df["建築年"].str.replace("戦前", "昭和20年")
         df["年号"] = df["建築年"].str[:2]
@@ -200,6 +199,7 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.convert_trading_point()
         self.df = self.relabeler("建物の構造", 100, True)
         self.df = self.relabeler("用途", 100, True)
+        self.df = self.relabeler("市区町村名", 2000)
         self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
         if policy == "onehot":
             self.df = self.to_onehot()
