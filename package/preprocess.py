@@ -186,7 +186,7 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.convert_construction_year()
         self.df = self.direction_to_int("前面道路：方位")
         self.df = self.convert_trading_point()
-        self.df = self.to_label("建物の構造", 100)
-        self.df = self.to_label("用途", 100)
+        self.df = self.relabeler("建物の構造", 100)
+        self.df = self.relabeler("用途", 100)
         self.df = self.to_onehot()
         return self.df
