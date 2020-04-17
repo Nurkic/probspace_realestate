@@ -180,6 +180,11 @@ class Preprocessor(_Rename, _Encoder):
     
         return df
 
+    def obj_to_numeric(self, cols: list):
+        df = self.df.copy()
+        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
+        return df
+
     def all(self):
         self.df = self.floor()
         self.df = self.min_from_sta()
