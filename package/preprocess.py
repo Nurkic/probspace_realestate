@@ -185,7 +185,7 @@ class Preprocessor(_Rename, _Encoder):
         df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
         return df
 
-    def all(self):
+    def all(self, policy: str):
         self.df = self.floor()
         self.df = self.min_from_sta()
         self.df = self.total_floor_area()
@@ -194,5 +194,11 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.convert_trading_point()
         self.df = self.relabeler("建物の構造", 100)
         self.df = self.relabeler("用途", 100)
-        self.df = self.to_onehot()
+        self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
+        if policy == "onehot":
+            self.df = self.to_onehot()
+        elif policy == "label":
+            self.df = self._cat_encoder()
+        else:
+            raise ValueError('Select "onehot" or "label"')
         return self.df
