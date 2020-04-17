@@ -104,6 +104,7 @@ class Preprocessor(_Rename, _Encoder):
         df["和暦年数"] = df["建築年"].str[2:].str.strip("年").fillna(0).astype(int)
         df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
         df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
+        df["建築年"] = pd.to_numeric(df["建築年"], errors="coerce")
         return df
 
     def direction_to_int(self, column: str) -> pd.DataFrame:
