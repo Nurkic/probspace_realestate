@@ -82,11 +82,13 @@ class Preprocessor(_Rename, _Encoder):
     def __init__(self, df: pd.DataFrame):
         super(Preprocessor, self).__init__(df)
         
-    def to_onehot(self, columns: list) -> pd.DataFrame:
+    def to_onehot(self) -> pd.DataFrame:
         """Convert a pandas.DataFrame element to a one-hot vector
         """
-        tmp = self._onehot_encoder(columns)
-        df = pd.concat([self.df, tmp], axis=1)
+        df = self.df.copy()
+        cols = df.columns[df.dtypes.eq("object")] 
+        tmp = self._onehot_encoder(cols)
+        df = pd.concat([df, tmp], axis=1)
         # for idempotent
         df = df.loc[:, ~df.columns.duplicated()]
         return df
