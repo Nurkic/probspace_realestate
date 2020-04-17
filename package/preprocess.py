@@ -183,10 +183,13 @@ class Preprocessor(_Rename, _Encoder):
         return df
 
     def total_floor_area(self) -> pd.DataFrame:
+        TABLE = {
+            "2000㎡以上": 2000,
+            "10m^2未満": 10
+        }
         df = self.df.copy()
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(TABLE)
+        df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
     
         return df
 
