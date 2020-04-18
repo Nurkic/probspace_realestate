@@ -51,8 +51,12 @@ class _Encoder:
             if self.df[column].dtype == object:
                 object_cols.append(column)
         
+        
         ce_oe = ce.OrdinalEncoder(cols=object_cols,handle_unknown='impute')
         df = ce_oe.fit_transform(self.df)
+
+        for obj_col in object_cols:
+            df[obj_col] = df[obj_col].astype("category")
 
         return df
 
@@ -201,6 +205,7 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.relabeler("用途", 100, True)
         self.df = self.relabeler("市区町村名", 2000)
         self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
+        self.df = self.rename_t()
         if policy == "onehot":
             self.df = self.to_onehot()
         elif policy == "label":
