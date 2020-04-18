@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import numpy as np
 import pandas as pd
 
@@ -15,17 +17,20 @@ train = pd.read_csv(train_path)
 test = pd.read_csv(test_path)
 
 """ Preprocessing"""
-from preprocess.Preprocessor import all
+import preprocess as pr
 
 df = train["y"]
 
 predata = pd.concat([train.drop("y", axis=1), test])
-predata = predata.all("onehot")
+predata = pr.Preprocessor(predata).all("label")
 
 prep_train = pd.concat([df, predata.iloc[:len(train), :]], axis=1)
 prep_test = predata.iloc[len(train):, :]
 
-train_X = prep_train.drop(["y"], axis=1)
+# prep_train = pr.Preprocessor(prep_train).rename_t()
+# prep_test = pr.Preprocessor(prep_test).rename_t()
+
+train_X = prep_train.drop(["y", "id"], axis=1)
 train_y = prep_train["y"]
 
 
@@ -34,7 +39,7 @@ train_y = prep_train["y"]
 reg = OGBMRegressor(random_state=71)
 reg.fit(train_X, train_y)
 
-res = reg.predict(prep_test)
+res = reg.predict(prep_test.drop(["id"], axis=1))
 
 """ export submit file"""
 result = pd.DataFrame(test.index, columns=["id"])
