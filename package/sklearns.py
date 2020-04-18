@@ -15,12 +15,12 @@ train = pd.read_csv(train_path)
 test = pd.read_csv(test_path)
 
 """ Preprocessing"""
-from preprocess import Preprocessor
+from preprocess.Preprocessor import all
 
 df = train["y"]
 
 predata = pd.concat([train.drop("y", axis=1), test])
-predata = Preprocessor.all(predata)
+predata = predata.all("onehot")
 
 prep_train = pd.concat([df, predata.iloc[:len(train), :]], axis=1)
 prep_test = predata.iloc[len(train):, :]
@@ -39,4 +39,4 @@ res = reg.predict(prep_test)
 """ export submit file"""
 result = pd.DataFrame(test.index, columns=["id"])
 result["y"] = res
-result.to_csv("result_realestate.csv", index=False)
+result.to_csv("../output/result_realestate.csv", index=False)

@@ -1,4 +1,4 @@
-from .preprocess import Rename
+from .preprocess import _Rename
 
 __all__ = [
     "Rename"

@@ -35,7 +35,6 @@ class _Rename:
         return df
 
 
-
 class _Encoder:
     def __init__(
         self,
@@ -59,8 +58,8 @@ class _Encoder:
 
 
     """ one hot encoding"""
-    def _onehot_encoder(self) -> pd.DataFrame:
-        df = pd.get_dummies(self.df, drop_first=True, dummy_na=False)
+    def _onehot_encoder(self, columns: list) -> pd.DataFrame:
+        df = pd.get_dummies(self.df[columns], drop_first=True, dummy_na=False)
     
         return df
 
@@ -68,15 +67,19 @@ class _Encoder:
     """ Adjust the number of label types"""
     def relabeler(
         self,
-        colname: str,
-        k: int = 100
+        column: str,
+        th: int = 100,
+        comma_sep: bool = False
         ) -> pd.DataFrame:
-        count_df = self.df[colname].value_counts().rename_axis[colname].reset_index(name="counts")
-        adj_list = list(count_df[colname][count_df["counts"] < k])
-        self.df[colname] = self.df[colname].replace(adj_list, "misc")
+        df = self.df.copy()
+        category_dict = df[column].value_counts().to_dict()
+        if comma_sep:
+            misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value < th]
+        else:
+            misc_list = [key for key, value in category_dict.items() if value < th]
+        df[column] = df[column].mask(df[column].isin(misc_list), "misc")
 
-        return self.df
-
+        return df
 
   
 class Preprocessor(_Rename, _Encoder):
@@ -86,25 +89,12 @@ class Preprocessor(_Rename, _Encoder):
     def to_onehot(self) -> pd.DataFrame:
         """Convert a pandas.DataFrame element to a one-hot vector
         """
-        tmp = self._onehot_encoder()
-        df = pd.concat([self.df, tmp], axis=1)
+        df = self.df.copy()
+        cols = df.columns[df.dtypes.eq("object")] 
+        tmp = self._onehot_encoder(cols)
+        df = pd.concat([df, tmp], axis=1)
         # for idempotent
         df = df.loc[:, ~df.columns.duplicated()]
-        return df
-
-    def to_label(self, column: str, th: int = 100) -> pd.DataFrame:
-        """Preprocessing for label-encoding.
-        Combine the fewest frequent combinations of words into one.
-        
-        Parameters
-        ----------
-        th : int
-            threshold of the number of occurences (default 100)
-        """
-        df = self.df.copy()
-        category_dict = df[column].value_counts().to_dict()
-        misc_list = [key for key, value in category_dict.items() if len(key.split("、")) == 2 or value <= th]
-        df[column] = df[column].mask(df[column].isin(misc_list), "misc")
         return df
 
     def convert_construction_year(self) -> pd.DataFrame:
@@ -113,13 +103,13 @@ class Preprocessor(_Rename, _Encoder):
         新たに追加される列名 -> 建築年(和暦), 年号, 和暦年数
         """
         df = self.df.copy()
-        df["建築年(和暦)"] = df["建築年"]
         df["建築年"].dropna(inplace=True)
         df["建築年"] = df["建築年"].str.replace("戦前", "昭和20年")
         df["年号"] = df["建築年"].str[:2]
         df["和暦年数"] = df["建築年"].str[2:].str.strip("年").fillna(0).astype(int)
         df.loc[df["年号"] == "昭和", "建築年"] = df["和暦年数"] + 1925
         df.loc[df["年号"] == "平成", "建築年"] = df["和暦年数"] + 1988
+        df["建築年"] = pd.to_numeric(df["建築年"], errors="coerce")
         return df
 
     def direction_to_int(self, column: str) -> pd.DataFrame:
@@ -171,34 +161,50 @@ class Preprocessor(_Rename, _Encoder):
     
         return df
 
-
     def min_from_sta(self) -> pd.DataFrame:
+        TABLE = {
+            "30分?60分": "45",
+            "1H?1H30": "75",
+            "1H30?2H": "105",
+            "2H?": "120"
+        }
         df = self.df.copy()
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 45 if "30分?60分" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 75 if "1H?1H30" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 105 if "1H30?2H" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].map(lambda x: 120 if "2H?" in x else x)
-        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].astype(int)
-    
-        return df
+        df["最寄駅：距離（分）"] = df["最寄駅：距離（分）"].replace(TABLE)
+        df["最寄駅：距離（分）"] = pd.to_numeric(df["最寄駅：距離（分）"], errors="coerce")
 
+        return df
 
     def total_floor_area(self) -> pd.DataFrame:
+        TABLE = {
+            "2000㎡以上": 2000,
+            "10m^2未満": 10
+        }
         df = self.df.copy()
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "2000㎡以上" in x else x)
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].map(lambda x: 2000 if "10m^2未満" in x else x)
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].astype(int)
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
+        df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
     
         return df
 
-    def all(self):
+    def obj_to_numeric(self, cols: list):
+        df = self.df.copy()
+        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
+        return df
+
+    def all(self, policy: str):
         self.df = self.floor()
         self.df = self.min_from_sta()
         self.df = self.total_floor_area()
         self.df = self.convert_construction_year()
         self.df = self.direction_to_int("前面道路：方位")
         self.df = self.convert_trading_point()
-        self.df = self.to_label("建物の構造", 100)
-        self.df = self.to_label("用途", 100)
-        self.df = self.to_onehot()
+        self.df = self.relabeler("建物の構造", 100, True)
+        self.df = self.relabeler("用途", 100, True)
+        self.df = self.relabeler("市区町村名", 2000)
+        self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
+        if policy == "onehot":
+            self.df = self.to_onehot()
+        elif policy == "label":
+            self.df = self._cat_encoder()
+        else:
+            raise ValueError('Select "onehot" or "label"')
         return self.df
