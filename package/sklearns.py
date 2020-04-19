@@ -19,7 +19,7 @@ from preprocess.Preprocessor import all
 
 df = train["y"]
 
-predata = pd.concat([train.drop("y", axis=1), test])
+predata = pd.concat([train.drop("y", axis=1), test], ignore_index=True)
 predata = predata.all("onehot")
 
 prep_train = pd.concat([df, predata.iloc[:len(train), :]], axis=1)
