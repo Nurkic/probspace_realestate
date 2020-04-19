@@ -21,7 +21,7 @@ import preprocess as pr
 
 df = train["y"]
 
-predata = pd.concat([train.drop("y", axis=1), test])
+predata = pd.concat([train.drop("y", axis=1), test], ignore_index=True)
 predata = pr.Preprocessor(predata).all("label")
 
 prep_train = pd.concat([df, predata.iloc[:len(train), :]], axis=1)
