@@ -33,15 +33,19 @@ prep_test = predata.iloc[len(train):, :]
 train_X = prep_train.drop(["y", "id"], axis=1)
 train_y = prep_train["y"]
 
+from feature_selection import FeatureSelector as FS, cross_validator
+# print(cross_validator(train_X, train_y))
 
+selected = FS(train_X, train_y).greedy_forward_selection()
+print(selected)
 
 """ model train & predict"""
 reg = OGBMRegressor(random_state=71)
-reg.fit(train_X, train_y)
+reg.fit(train_X[selected], train_y)
 
-res = reg.predict(prep_test.drop(["id"], axis=1))
+res = reg.predict(prep_test[selected])
 
 """ export submit file"""
 result = pd.DataFrame(test.index, columns=["id"])
 result["y"] = res
-result.to_csv("../output/result_realestate.csv", index=False)
+result.to_csv("../output/result_realestate_20200421_01.csv", index=False)
