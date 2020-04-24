@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 import json
+import re
 
 import category_encoders as ce
 
@@ -46,10 +47,11 @@ class _Encoder:
 
     """ label encoding"""
     def _cat_encoder(self) -> pd.DataFrame:
-        object_cols = []
-        for column in self.df.columns:
-            if self.df[column].dtype == object:
-                object_cols.append(column)
+        object_cols = [
+            'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning',
+            'Renovation','Remarks','L','D','K','S','R','Maisonette','OpenFloor','Studio','era_name'
+            ]
         
         
         ce_oe = ce.OrdinalEncoder(cols=object_cols,handle_unknown='impute')
@@ -155,6 +157,12 @@ class Preprocessor(_Rename, _Encoder):
 
     def floor(self) -> pd.DataFrame:
         df = self.df.copy()
+        trans_table = str.maketrans({"１":"1", "２":"2", "３":"3", "４":"4","５":"5", "６":"6","７":"7", "８":"8"})
+        df['間取り'] = df['間取り'].map(lambda x: x.translate(trans_table) if type(x) is str else x)
+        df['NumberOfRooms'] = df['間取り'].map(
+            lambda x: 1 if (type(x) == float) or (x == "メゾネット") or (x == "オープンフロア") or (x == "スタジオ") 
+            else int(re.search('[0-9]+', x).group(0))
+            )
         df['L'] = df['間取り'].map(lambda x: 1 if 'Ｌ' in str(x) else 0)
         df['D'] = df['間取り'].map(lambda x: 1 if 'Ｄ' in str(x) else 0)
         df['K'] = df['間取り'].map(lambda x: 1 if 'Ｋ' in str(x) else 0)
