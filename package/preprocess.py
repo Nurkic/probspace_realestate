@@ -208,6 +208,11 @@ class Preprocessor(_Rename, _Encoder):
         df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
         return df
 
+    def building_age(self):
+        df = self.df.copy()
+        df["BuildingAge"] = df["取引時点"] - df["建築年"]
+        return df
+
     def all(self, policy: str):
         self.df = self.floor()
         self.df = self.min_from_sta()
@@ -219,6 +224,7 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.relabeler("用途", 100, True)
         self.df = self.relabeler("市区町村名", 2000)
         self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
+        self.df = self.building_age()
         self.df = self.rename_t()
         if policy == "onehot":
             self.df = self.to_onehot()

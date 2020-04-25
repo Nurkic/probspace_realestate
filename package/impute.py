@@ -7,7 +7,7 @@ import pandas as pd
 class Imputer:
     def __init__(
         self,
-        df: pd.Dataframe
+        df: pd.DataFrame
     ) -> None:
         self.df = df
 
@@ -18,7 +18,7 @@ class Imputer:
     ) -> pd.DataFrame:
         df = self.df.copy()
         for col in cols:
-            df[col] == df[col].fillna(df[col].mean())
+            df[col] = df[col].fillna(df[col].mean())
         
         return df
 
@@ -29,7 +29,7 @@ class Imputer:
     ) -> pd.DataFrame:
         df = self.df.copy()
         for col in cols:
-            df[col] == df[col].fillna(df[col].mode())
+            df[col] = df[col].fillna(df[col].mode())
         
         return df
 
