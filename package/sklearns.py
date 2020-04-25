@@ -35,7 +35,7 @@ num_list = [
     "Breadth", "CoverageRatio", "FloorAreaRatio", "Period"
     ]
 predata_onehot = im.Imputer(predata_onehot).num_imputer(num_list)
-print(predata_onehot.isnull().sum( ))
+print(predata_onehot[num_list].isnull().sum( ))
 
 prep_train_onehot = pd.concat([df, predata_onehot.iloc[:len(train), :]], axis=1)
 prep_test_onehot = predata_onehot.iloc[len(train):, :]
