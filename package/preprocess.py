@@ -50,7 +50,7 @@ class _Encoder:
     def _cat_encoder(self) -> pd.DataFrame:
         object_cols = [
             'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
-            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning',
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction'
             'Renovation','Remarks','L','D','K','S','R','Maisonette','OpenFloor','Studio','era_name'
             ]
         
@@ -99,7 +99,7 @@ class Preprocessor(_Rename, _Encoder):
         df = self.df.copy()
         cols = [
             'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
-            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning',
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction'
             'Renovation','Remarks','era_name'
             ]
         tmp = self._onehot_encoder(cols)
