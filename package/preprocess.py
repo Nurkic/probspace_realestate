@@ -211,6 +211,7 @@ class Preprocessor(_Rename, _Encoder):
     def building_age(self):
         df = self.df.copy()
         df["BuildingAge"] = df["取引時点"] - df["建築年"]
+        return df
 
     def all(self, policy: str):
         self.df = self.floor()
