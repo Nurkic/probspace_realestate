@@ -200,6 +200,7 @@ class Preprocessor(_Rename, _Encoder):
         df = self.df.copy()
         df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
         df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
+        df["延床面積（㎡）"] = df["延床面積（㎡）"].mask(df["延床面積（㎡）"].isnull(), df["面積（㎡）"] * df["容積率（％）"] / 100)
     
         return df
 
@@ -211,6 +212,11 @@ class Preprocessor(_Rename, _Encoder):
     def building_age(self):
         df = self.df.copy()
         df["BuildingAge"] = df["取引時点"] - df["建築年"]
+        return df
+
+    def floor_area_ratio(self):
+        df = self.df.copy()
+        df["容積率（％）"] = df["容積率（％）"].mask(df["容積率（％）"].isnull(), df["延床面積（㎡）"] / df["面積（㎡）"] * 100)
         return df
 
     def all(self, policy: str):
