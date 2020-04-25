@@ -214,6 +214,11 @@ class Preprocessor(_Rename, _Encoder):
         df["BuildingAge"] = df["取引時点"] - df["建築年"]
         return df
 
+    def floor_area_ratio(self):
+        df = self.df.copy()
+        df["容積率（％）"] = df["容積率（％）"].mask(df["容積率（％）"].isnull(), df["延床面積（㎡）"] / df["面積（㎡）"] * 100)
+        return df
+
     def all(self, policy: str):
         self.df = self.floor()
         self.df = self.min_from_sta()
