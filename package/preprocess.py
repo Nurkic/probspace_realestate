@@ -7,6 +7,7 @@ import re
 import category_encoders as ce
 
 
+
 class _Rename:
     def __init__(
         self,
@@ -96,7 +97,11 @@ class Preprocessor(_Rename, _Encoder):
         """Convert a pandas.DataFrame element to a one-hot vector
         """
         df = self.df.copy()
-        cols = df.columns[df.dtypes.eq("object")] 
+        cols = [
+            'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning',
+            'Renovation','Remarks','era_name'
+            ]
         tmp = self._onehot_encoder(cols)
         df = pd.concat([df, tmp], axis=1)
         # for idempotent
