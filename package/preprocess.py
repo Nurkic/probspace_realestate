@@ -231,6 +231,7 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.relabeler("市区町村名", 2000)
         self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
         self.df = self.building_age()
+        self.df = self.floor_area_ratio()
         self.df = self.rename_t()
         if policy == "onehot":
             self.df = self.to_onehot()
