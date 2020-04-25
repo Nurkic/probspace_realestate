@@ -31,7 +31,7 @@ predata_label = pr.Preprocessor(predata_copy).all("label")
 
 """ missing values imputation"""
 num_list = [
-    "TimeToNearestStation", "TotalFloorArea", "Area", "Frontage", "BuildingYear", "Direction", 
+    "TimeToNearestStation", "TotalFloorArea", "Area", "Frontage", "BuildingYear", "BuildingAge", 
     "Breadth", "CoverageRatio", "FloorAreaRatio", "Period"
     ]
 predata_onehot = im.Imputer(predata_onehot).num_imputer(num_list)
@@ -47,13 +47,13 @@ prep_train_onehot.to_csv("prep_train_onehot.csv", index=False)
 prep_test_onehot.to_csv("prep_test_onehot.csv", index=False)
 
 """ define data"""
-"""train_X = prep_train.drop(["y", "id", "Prefecture", "Municipality"], axis=1)
-train_y = prep_train["y"]
-test_X = prep_test.drop(["id", "Prefecture", "Municipality"], axis=1)"""
+train_X = prep_train_label.drop(["y", "id", "Prefecture", "Municipality"], axis=1)
+train_y = prep_train_label["y"]
+test_X = prep_test_label.drop(["id", "Prefecture", "Municipality"], axis=1)
 
 """ target encoding"""
-from feature_selection import FeatureSelector as FS, cross_validator
-#train_X_te, test_X_te = FS(train_X, train_y).target_encoder(test_X)
+"""from feature_selection import FeatureSelector as FS, cross_validator
+train_X_te, test_X_te = FS(train_X, train_y).target_encoder(test_X)"""
 
 """ feature selection"""
 """selected = FS(train_X, train_y).greedy_forward_selection()
@@ -74,20 +74,21 @@ print("target encoding and feature selection rmse:"+ str(cv4))"""
 
 
 """ model train & predict"""
-"""reg = OGBMRegressor(random_state=71)
+reg = OGBMRegressor(random_state=71)
 reg.fit(train_X, train_y)
 
-res = reg.predict(test_X)"""
+res = reg.predict(test_X)
 
 """ check feature importances"""
-"""importances = pd.DataFrame(
+importances = pd.DataFrame(
     reg.feature_importances_, index=train_X.columns, 
     columns=["importance"]
     )
 importances = importances.sort_values("importance",
     ascending=False
     )
-print(importances)"""
+"""importances.to_csv("feature_importance.csv")"""
+print(importances)
 
 """ export submit file"""
 """result = pd.DataFrame(test.index, columns=["id"])
