@@ -6,6 +6,7 @@ from sklearn.model_selection import KFold
 
 from lightgbm import LGBMRegressor
 
+import copy
 
 
 """ cross validation"""
@@ -70,29 +71,30 @@ class FeatureSelector:
 
 
     """ target encoding"""
-    def target_encodeing(
+    def target_encoder(
         self,
         test: pd.DataFrame
         ) -> pd.DataFrame:
-        column_list = []
-        
-        train_X = self.train_X
-        for column in train_X.columns:
-            if train_X[column].dtype == category:
-                column_list.append(column)
+        train_X_te = copy.deepcopy(self.train_X)
+        test_X_te = copy.deepcopy(test)
+        column_list = self.train_X.select_dtypes(include=["category"]).columns
+        if len(column_list) > 0:
+            print("categorical features:"+ str(column_list))
+        else:
+            print("No categorical features")
         for c in column_list:
-            data_tmp = pd.DataFrame({c: train_X[c], "target": self.train_y})
+            data_tmp = pd.DataFrame({c: train_X_te[c], "target": self.train_y})
             target_mean = data_tmp.groupby(c)["target"].mean()
-            #print(target_mean)
-            test[c] = test[c].map(target_mean)
+            """ print(target_mean)"""
+            test_X_te[c] = test_X_te[c].map(target_mean)
 
-            tmp = np.repeat(np.nan, train_X.shape[0])
+            tmp = np.repeat(np.nan, self.train_X.shape[0])
             kf_encoding = KFold(n_splits=4, shuffle=True, random_state=72)
-            for idx_1, idx_2 in kf_encoding.split(train_X):
+            for idx_1, idx_2 in kf_encoding.split(train_X_te):
                 target_mean = data_tmp.iloc[idx_1].groupby(c)["target"].mean()
 
-                tmp[idx_2] = train_X[c].iloc[idx_2].map(target_mean)
+                tmp[idx_2] = train_X_te[c].iloc[idx_2].map(target_mean)
 
-            train_X[c] = tmp
+            train_X_te[c] = tmp
 
-        return train_X, test
+        return train_X_te, test_X_te
