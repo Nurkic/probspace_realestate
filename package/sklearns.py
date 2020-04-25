@@ -91,6 +91,6 @@ importances = importances.sort_values("importance",
 print(importances)
 
 """ export submit file"""
-"""result = pd.DataFrame(test.index, columns=["id"])
+result = pd.DataFrame(test.index, columns=["id"])
 result["y"] = res
-result.to_csv("../output/result_realestate_20200424_02.csv", index=False)"""
+result.to_csv("../output/result_realestate_20200426_02.csv", index=False)
