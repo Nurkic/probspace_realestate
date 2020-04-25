@@ -199,7 +199,8 @@ class Preprocessor(_Rename, _Encoder):
         }
         df = self.df.copy()
         df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
-        df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
+        cols = ["延床面積（㎡）", "容積率（％）", "面積（㎡）"]
+        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
         df["延床面積（㎡）"] = df["延床面積（㎡）"].mask(df["延床面積（㎡）"].isnull(), df["面積（㎡）"] * df["容積率（％）"] / 100)
     
         return df
