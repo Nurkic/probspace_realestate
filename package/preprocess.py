@@ -99,7 +99,7 @@ class Preprocessor(_Rename, _Encoder):
         df = self.df.copy()
         cols = [
             'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
-            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction'
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction',
             'Renovation','Remarks','era_name'
             ]
         tmp = self._onehot_encoder(cols)
@@ -201,13 +201,31 @@ class Preprocessor(_Rename, _Encoder):
         df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
         df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
         df["延床面積（㎡）"] = df["延床面積（㎡）"].mask(df["延床面積（㎡）"].isnull(), df["面積（㎡）"] * df["容積率（％）"] / 100)
-    
+        """for i in range(len(df)):
+            if (df["延床面積（㎡）"].iloc[i] is None) or (df["延床面積（㎡）"].iloc[i] == np.nan):
+                df["延床面積（㎡）"].iloc[i] = (df["面積（㎡）"].iloc[i] * df["容積率（％）"].iloc[i]) / 100"""
         return df
 
     def obj_to_numeric(self, cols: list):
         df = self.df.copy()
-        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
+        for col in cols:
+            for i in range(len(df[col])):
+                if type(df[col].iloc[i]) == str:
+                    num = re.sub("\\D", "", df[col].iloc[i])
+                    df[col].iloc[i] = int(num)
+        df[cols] = pd.to_numeric(df[cols], errors="coerce")
+        df[cols] = df[cols].astype(int)
         return df
+
+    def maguti_to_numeric(self):
+        df = self.df.copy()
+        for i in range(len(df["間口"])):
+            if type(df["間口"].iloc[i]) == str:
+                num = re.sub("\\D", "", df["間口"].iloc[i])
+                df["間口"].iloc[i] = float(num)
+        df["間口"] = df["間口"].astype(float)
+        return df
+
 
     def building_age(self):
         df = self.df.copy()
@@ -217,6 +235,19 @@ class Preprocessor(_Rename, _Encoder):
     def floor_area_ratio(self):
         df = self.df.copy()
         df["容積率（％）"] = df["容積率（％）"].mask(df["容積率（％）"].isnull(), df["延床面積（㎡）"] / df["面積（㎡）"] * 100)
+        return df
+
+    def min_max(self) -> pd.DataFrame:
+        df = self.df.copy()
+        num_list = [
+        "TimeToNearestStation", "TotalFloorArea", "Area", "Frontage", "BuildingYear", "BuildingAge", 
+        "Breadth", "CoverageRatio", "FloorAreaRatio", "Period"
+        ]
+        for num in num_list:
+            min_value = df[num].min()
+            max_value = df[num].max()
+            result = (df[num] - min_value)/(max_value - min_value)
+            df[num] = result
         return df
 
     def all(self, policy: str):
@@ -229,12 +260,15 @@ class Preprocessor(_Rename, _Encoder):
         self.df = self.relabeler("建物の構造", 100, True)
         self.df = self.relabeler("用途", 100, True)
         self.df = self.relabeler("市区町村名", 2000)
-        self.df = self.obj_to_numeric(["面積（㎡）", "間口"])
+        self.df = self.obj_to_numeric(["面積（㎡）", "延床面積（㎡）"])
+        self.df = self.maguti_to_numeric()
+        self.df = self.total_floor_area()
         self.df = self.building_age()
         self.df = self.floor_area_ratio()
         self.df = self.rename_t()
         if policy == "onehot":
             self.df = self.to_onehot()
+            self.df = self.min_max()
         elif policy == "label":
             self.df = self._cat_encoder()
         else:
