@@ -107,7 +107,7 @@ class MLP(tf.keras.Model):
 def cross_validator_lgbm(
     train_X: pd.DataFrame, 
     train_y: pd.DataFrame
-    ) -> float, np.ndarray:
+    ):
     rmses = []
      
     oof = np.zeros((len(train_y), ))
@@ -129,7 +129,7 @@ def cross_validator_lgbm(
 def cross_validator_nn(
     train_X: pd.DataFrame, 
     train_y: pd.DataFrame
-    ) -> float, np.ndarray:
+    ):
     rmses = []
         
     oof = np.zeros((len(train_y), ))
@@ -163,14 +163,15 @@ def cross_validator_nn(
         callbacks=[tensorboard, checkpoint]
     )
             
-        """val_mse, val_acc = model.evaluate(x_valid,  y_valid)
-        rmse = np.sqrt(val_rmse)"""
-        va_pred = model.predict_on_batch(va_X)
-        rmse = np.sqrt(mean_squared_error(va_y, va_pred))
+    """val_mse, val_acc = model.evaluate(x_valid,  y_valid)"""
+    """rmse = np.sqrt(val_rmse)"""
+    va_pred = model.predict_on_batch(va_X)
+    rmse = np.sqrt(mean_squared_error(va_y, va_pred))
             
-        rmse.append(rmse)
+    rmse.append(rmse)
             
-        oof[va_idx] = va_pred
+    oof[va_idx] = va_pred
+
     return np.mean(rmses), oof
 
 
@@ -200,28 +201,27 @@ print(importances)"""
 
 """ train NN"""
 model_nn = MLP()
-    tensorboard = TensorBoard(log_dir="logs")
-    checkpoint = tf.keras.callbacks.ModelCheckpoint(
-        "./checkpoint/MLP-{epoch:04d}.ckpt",
-        verbose=1,
-        save_weights_only=True,
-        period=300
-    )
-    model_nn.compile(
-        optimizer=tf.keras.optimizers.Adam(lr=1e-1),
-        loss='mean_squared_error',
-        metrics=[
-            "mean_squared_error", 
-        ]
-    )
-    model_nn.fit(
-        train_onehot, 
-        train_y_onehot, 
-        epochs=100,
-        batch_size=300,
-        """validation_data=(va_X, va_y),"""
-        callbacks=[tensorboard, checkpoint]
-    )
+tensorboard = TensorBoard(log_dir="logs")
+checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    "./checkpoint/MLP-{epoch:04d}.ckpt",
+    verbose=1,
+    save_weights_only=True,
+    period=300
+)
+model_nn.compile(
+    optimizer=tf.keras.optimizers.Adam(lr=1e-1),
+    loss='mean_squared_error',
+    metrics=[
+        "mean_squared_error", 
+    ]
+)
+model_nn.fit(
+    train_onehot, 
+    train_y_onehot, 
+    epochs=100,
+    batch_size=300,
+    callbacks=[tensorboard, checkpoint]
+)
 
 
 """ model blending"""
