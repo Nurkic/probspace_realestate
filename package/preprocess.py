@@ -199,7 +199,8 @@ class Preprocessor(_Rename, _Encoder):
         }
         df = self.df.copy()
         df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
-        df["延床面積（㎡）"] = pd.to_numeric(df["延床面積（㎡）"], errors="coerce")
+        cols = ["延床面積（㎡）", "容積率（％）", "面積（㎡）"]
+        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
         df["延床面積（㎡）"] = df["延床面積（㎡）"].mask(df["延床面積（㎡）"].isnull(), df["面積（㎡）"] * df["容積率（％）"] / 100)
         """for i in range(len(df)):
             if (df["延床面積（㎡）"].iloc[i] is None) or (df["延床面積（㎡）"].iloc[i] == np.nan):
@@ -213,8 +214,8 @@ class Preprocessor(_Rename, _Encoder):
                 if type(df[col].iloc[i]) == str:
                     num = re.sub("\\D", "", df[col].iloc[i])
                     df[col].iloc[i] = int(num)
-        df[cols] = pd.to_numeric(df[cols], errors="coerce")
-        df[cols] = df[cols].astype(int)
+        df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
+        """df[cols] = df[cols].astype(int)"""
         return df
 
     def maguti_to_numeric(self):
@@ -235,6 +236,9 @@ class Preprocessor(_Rename, _Encoder):
     def floor_area_ratio(self):
         df = self.df.copy()
         df["容積率（％）"] = df["容積率（％）"].mask(df["容積率（％）"].isnull(), df["延床面積（㎡）"] / df["面積（㎡）"] * 100)
+        """for i in range(len(df)):
+            if (df["容積率（％）"].iloc[i] is None) or (df["容積率（％）"].iloc[i] == np.nan):
+                df["容積率（％）"].iloc[i] = (df["延床面積（㎡）"].iloc[i] * df["面積（㎡）"].iloc[i]) * 100"""
         return df
 
     def min_max(self) -> pd.DataFrame:
