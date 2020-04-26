@@ -50,7 +50,7 @@ class _Encoder:
     def _cat_encoder(self) -> pd.DataFrame:
         object_cols = [
             'Type','Region','MunicipalityCode','Prefecture','Municipality','DistrictName','NearestStation',
-            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction'
+            'FloorPlan','LandShape','Structure','Use','Purpose','Classification','CityPlanning', 'Direction',
             'Renovation','Remarks','L','D','K','S','R','Maisonette','OpenFloor','Studio','era_name'
             ]
         
@@ -198,33 +198,26 @@ class Preprocessor(_Rename, _Encoder):
             "10m^2未満": 10
         }
         df = self.df.copy()
-        df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)
+        """df["延床面積（㎡）"] = df["延床面積（㎡）"].replace(TABLE)"""
         cols = ["延床面積（㎡）", "容積率（％）", "面積（㎡）"]
         df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
         df["延床面積（㎡）"] = df["延床面積（㎡）"].mask(df["延床面積（㎡）"].isnull(), df["面積（㎡）"] * df["容積率（％）"] / 100)
-        """for i in range(len(df)):
-            if (df["延床面積（㎡）"].iloc[i] is None) or (df["延床面積（㎡）"].iloc[i] == np.nan):
-                df["延床面積（㎡）"].iloc[i] = (df["面積（㎡）"].iloc[i] * df["容積率（％）"].iloc[i]) / 100"""
+        
         return df
 
     def obj_to_numeric(self, cols: list):
         df = self.df.copy()
         for col in cols:
-            for i in range(len(df[col])):
-                if type(df[col].iloc[i]) == str:
-                    num = re.sub("\\D", "", df[col].iloc[i])
-                    df[col].iloc[i] = int(num)
+            df[col] = df[col].map(lambda x: int(re.sub("\\D", "", x)) if type(x)==str else x)
+            
         df[cols] = df[cols].apply(pd.to_numeric, errors="coerce")
-        """df[cols] = df[cols].astype(int)"""
+        
         return df
 
     def maguti_to_numeric(self):
         df = self.df.copy()
-        for i in range(len(df["間口"])):
-            if type(df["間口"].iloc[i]) == str:
-                num = re.sub("\\D", "", df["間口"].iloc[i])
-                df["間口"].iloc[i] = float(num)
-        """df["間口"] = df["間口"].astype(float)"""
+        df["間口"] = df["間口"].map(lambda x: float(re.sub("\\D", "", x)) if type(x)==str else x)
+        
         return df
 
 
@@ -236,9 +229,7 @@ class Preprocessor(_Rename, _Encoder):
     def floor_area_ratio(self):
         df = self.df.copy()
         df["容積率（％）"] = df["容積率（％）"].mask(df["容積率（％）"].isnull(), df["延床面積（㎡）"] / df["面積（㎡）"] * 100)
-        """for i in range(len(df)):
-            if (df["容積率（％）"].iloc[i] is None) or (df["容積率（％）"].iloc[i] == np.nan):
-                df["容積率（％）"].iloc[i] = (df["延床面積（㎡）"].iloc[i] * df["面積（㎡）"].iloc[i]) * 100"""
+        
         return df
 
     def min_max(self) -> pd.DataFrame:
