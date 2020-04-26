@@ -224,7 +224,7 @@ class Preprocessor(_Rename, _Encoder):
             if type(df["間口"].iloc[i]) == str:
                 num = re.sub("\\D", "", df["間口"].iloc[i])
                 df["間口"].iloc[i] = float(num)
-        df["間口"] = df["間口"].astype(float)
+        """df["間口"] = df["間口"].astype(float)"""
         return df
 
 
